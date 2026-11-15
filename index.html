@@ -1,32 +1,70 @@
-fetch("news.json")
-  .then(response => response.json())
-  .then(articles => {
-    const container = document.getElementById("news");
-    container.replaceChildren();
 
-    articles.forEach(article => {
-      const card = document.createElement("article");
+const newsContainer = document.getElementById("news");
 
-      const category = document.createElement("small");
-      category.textContent = article.category;
+async function loadNews() {
+  newsContainer.textContent = "Loading latest news...";
 
-      const title = document.createElement("h3");
-      const link = document.createElement("a");
-      link.href = `article.html?id=${encodeURIComponent(article.id)}`;
-      link.textContent = article.title;
-      title.appendChild(link);
+  try {
+    const response = await fetch("news.json");
 
-      const description = document.createElement("p");
-      description.textContent = article.description;
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
 
-      const date = document.createElement("small");
-      date.textContent = article.date;
+    const articles = await response.json();
 
-      card.append(category, title, description, date);
-      container.appendChild(card);
-    });
-  })
-  .catch(() => {
-    document.getElementById("news").textContent =
-      "News is currently unavailable.";
-  });
+    if (!Array.isArray(articles)) {
+      throw new Error("Invalid news data");
+    }
+
+    newsContainer.replaceChildren();
+
+    if (articles.length === 0) {
+      newsContainer.textContent = "No articles published yet.";
+      return;
+    }
+
+    articles
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .forEach(article => {
+        const card = document.createElement("article");
+        card.className = "news-card";
+
+        const category = document.createElement("small");
+        category.className = "news-category";
+        category.textContent = article.category || "General";
+
+        const title = document.createElement("h3");
+        const link = document.createElement("a");
+
+        link.href = `article.html?id=${encodeURIComponent(article.id)}`;
+        link.textContent = article.title || "Untitled article";
+
+        title.appendChild(link);
+
+        const description = document.createElement("p");
+        description.textContent =
+          article.description || "No description available.";
+
+        const date = document.createElement("time");
+        date.dateTime = article.date || "";
+        date.textContent = article.date
+          ? new Date(article.date + "T00:00:00").toLocaleDateString(
+              "en-IN",
+              { day: "numeric", month: "short", year: "numeric" }
+            )
+          : "Date unavailable";
+
+        card.append(category, title, description, date);
+        newsContainer.appendChild(card);
+      });
+
+  } catch (error) {
+    console.error("PXL News error:", error);
+
+    newsContainer.textContent =
+      "Unable to load news. Please try again later.";
+  }
+}
+
+loadNews();
