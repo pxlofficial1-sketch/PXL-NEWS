@@ -47,7 +47,10 @@ for article in articles:
 # Save RSS feed
 tree = ET.ElementTree(rss)
 ET.indent(tree, space="  ")
-tree.write("feed.xml", encoding="utf-8", xml_declaration=True)
+xml_data = ET.tostring(rss, encoding="utf-8")
+Path("feed.xml").write_bytes(
+    b'<?xml version="1.0" encoding="UTF-8"?>\n' + xml_data
+)
 
 print("RSS feed generated successfully!")
 
