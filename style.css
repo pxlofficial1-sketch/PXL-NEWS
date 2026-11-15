@@ -108,5 +108,31 @@ footer {
   article {
     padding: 18px;
   }
+
+  
+header h1 a,
+article h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+article h3 a:hover {
+  color: var(--accent);
+}
+
+article > small:first-child {
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+main > a {
+  color: var(--accent);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 25px;
+}
+
 }
 
