@@ -7,17 +7,19 @@
     <language>en-us</language>
     <item>
       <title>Welcome to PXL Tech News</title>
-      <link>https://pxlofficial1-sketch.github.io/PXL-NEWS/</link>
+      <link>https://pxlofficial1-sketch.github.io/PXL-NEWS/article.html?id=welcome</link>
       <description>Your community's independent source for technology, programming, AI and open-source news.</description>
+      <category>Community</category>
       <pubDate>Sun, 15 Nov 2026 00:00:00 +0000</pubDate>
-      <guid isPermaLink="false">951336ee6a711b80bd195854a4a30426f790b1773adecaaf7048a098d8b297f1</guid>
+      <guid isPermaLink="false">280d44ab1e9f79b5cce2dd4f58f5fe91f0fbacdac9f7447dffc318ceb79f2d02</guid>
     </item>
     <item>
       <title>Explore Open Source</title>
-      <link>https://pxlofficial1-sketch.github.io/PXL-NEWS/</link>
+      <link>https://pxlofficial1-sketch.github.io/PXL-NEWS/article.html?id=open-source</link>
       <description>Discover exciting open-source projects and developer tools through PXL Tech News.</description>
+      <category>Programming</category>
       <pubDate>Sun, 15 Nov 2026 00:00:00 +0000</pubDate>
-      <guid isPermaLink="false">916b552219ca5debfe55976b1389708f478df6caf468f8bd137df740f80d667b</guid>
+      <guid isPermaLink="false">403cae7d3bfc59b2cd2eb593faaa1ddb0a149227522d1349ec47806439bea623</guid>
     </item>
   </channel>
 </rss>
