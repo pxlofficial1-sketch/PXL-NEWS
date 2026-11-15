@@ -1,0 +1,45 @@
+
+name: Publish News Article
+description: Submit a new PXL Tech News article
+title: "[Publish] "
+labels:
+  - news-submission
+body:
+  - type: input
+    id: headline
+    attributes:
+      label: Headline
+      placeholder: Enter your news headline
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - AI
+        - Programming
+        - Linux
+        - Gaming
+        - Cybersecurity
+        - Open Source
+        - Technology
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Article description
+      description: Write your original news article.
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Original source URL
+      placeholder: https://example.com/article
+    validations:
+      required: false
