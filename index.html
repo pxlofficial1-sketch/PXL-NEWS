@@ -1,1 +1,47 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PXL Tech News</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>PXL<span>Tech</span></h1>
+    <p>Technology. Development. Innovation.</p>
+  </header>
+
+  <main>
+    <h2>Latest News</h2>
+    <div id="news">
+      Loading news...
+    </div>
+  </main>
+
+  <footer>
+    <p>Powered by PXL Community</p>
+  </footer>
+
+  <script>
+    fetch("news.json")
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("news").innerHTML =
+          data.map(article => `
+            <article>
+              <h3>${article.title}</h3>
+              <p>${article.description}</p>
+              <small>${article.date}</small>
+            </article>
+          `).join("");
+      })
+      .catch(() => {
+        document.getElementById("news").textContent =
+          "News is currently unavailable.";
+      });
+  </script>
+</body>
+</html>
+
