@@ -1,14 +1,19 @@
 
 [
   {
+    "id": "welcome",
     "title": "Welcome to PXL Tech News",
     "description": "Your community's independent source for technology, programming, AI and open-source news.",
-    "date": "2026-11-15"
+    "category": "Community",
+    "date": "2026-11-15",
+    "source": ""
   },
   {
+    "id": "open-source",
     "title": "Explore Open Source",
     "description": "Discover exciting open-source projects and developer tools through PXL Tech News.",
-    "date": "2026-11-15"
+    "category": "Programming",
+    "date": "2026-11-15",
+    "source": ""
   }
 ]
-
