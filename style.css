@@ -1,1 +1,112 @@
 
+/* PXL Tech News */
+
+:root {
+  --bg: #0b0d12;
+  --surface: #121620;
+  --border: #252b38;
+  --text: #f1f3f8;
+  --muted: #929bad;
+  --accent: #8b5cf6;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+header {
+  text-align: center;
+  padding: 65px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #151225, #0b0d12);
+}
+
+header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+header h1 span {
+  color: var(--accent);
+}
+
+header p {
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+main {
+  max-width: 850px;
+  margin: 55px auto;
+  padding: 0 20px;
+}
+
+main h2 {
+  font-size: 25px;
+  margin-bottom: 25px;
+}
+
+#news {
+  display: grid;
+  gap: 18px;
+}
+
+article {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+article:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+}
+
+article h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+article p {
+  color: var(--muted);
+  margin-bottom: 15px;
+}
+
+article small {
+  color: var(--accent);
+}
+
+footer {
+  text-align: center;
+  padding: 30px 20px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  header h1 {
+    font-size: 34px;
+  }
+
+  main {
+    margin: 35px auto;
+  }
+
+  article {
+    padding: 18px;
+  }
+}
+
