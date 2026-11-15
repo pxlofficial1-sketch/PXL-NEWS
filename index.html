@@ -1,47 +1,33 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PXL Tech News</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header>
-    <h1>PXL<span>Tech</span></h1>
-    <p>Technology. Development. Innovation.</p>
-  </header>
+fetch("news.json")
+  .then(response => response.json())
+  .then(articles => {
+    const container = document.getElementById("news");
+    container.replaceChildren();
 
-  <main>
-    <h2>Latest News</h2>
-    <div id="news">
-      Loading news...
-    </div>
-  </main>
+    articles.forEach(article => {
+      const card = document.createElement("article");
 
-  <footer>
-    <p>Powered by PXL Community</p>
-  </footer>
+      const category = document.createElement("small");
+      category.textContent = article.category;
 
-  <script>
-    fetch("news.json")
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById("news").innerHTML =
-          data.map(article => `
-            <article>
-              <h3>${article.title}</h3>
-              <p>${article.description}</p>
-              <small>${article.date}</small>
-            </article>
-          `).join("");
-      })
-      .catch(() => {
-        document.getElementById("news").textContent =
-          "News is currently unavailable.";
-      });
-  </script>
-</body>
-</html>
+      const title = document.createElement("h3");
+      const link = document.createElement("a");
+      link.href = `article.html?id=${encodeURIComponent(article.id)}`;
+      link.textContent = article.title;
+      title.appendChild(link);
 
+      const description = document.createElement("p");
+      description.textContent = article.description;
+
+      const date = document.createElement("small");
+      date.textContent = article.date;
+
+      card.append(category, title, description, date);
+      container.appendChild(card);
+    });
+  })
+  .catch(() => {
+    document.getElementById("news").textContent =
+      "News is currently unavailable.";
+  });
