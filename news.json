@@ -1,4 +1,3 @@
-
 [
   {
     "id": "welcome",
@@ -15,5 +14,13 @@
     "category": "Programming",
     "date": "2026-11-15",
     "source": ""
+  },
+  {
+    "id": "pxl-issue-3",
+    "title": "test",
+    "category": "Community",
+    "description": "...",
+    "date": "2026-11-16",
+    "source": "https://github.com/pxlofficial1-sketch/PXL-NEWS"
   }
 ]
