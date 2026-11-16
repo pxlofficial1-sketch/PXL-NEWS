@@ -30,5 +30,13 @@
     "description": "WORKING!!!",
     "date": "2026-11-16",
     "source": "https://github.com/pxlofficial1-sketch/PXL-NEWS/"
+  },
+  {
+    "id": "pxl-issue-6",
+    "title": "test 1",
+    "category": "Community",
+    "description": "WORKING!!! without url",
+    "date": "2026-11-16",
+    "source": ""
   }
 ]
