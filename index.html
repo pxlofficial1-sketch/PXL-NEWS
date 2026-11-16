@@ -1,70 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="description" content="Technology, development, and innovation from the PXL community.">
+  <title>PXL Tech News</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="PXL Tech News home">PXL<span>Tech</span></a>
+      <button class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false">
+        <span class="nav-toggle-label">Menu</span>
+        <span class="nav-toggle-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+      </button>
+      <nav id="primary-nav" class="primary-nav" aria-label="Main navigation">
+        <a href="#featured">Featured</a>
+        <a href="#latest">Latest news</a>
+      </nav>
+    </div>
+    <div class="header-copy">
+      <p>Technology. Development. Innovation.</p>
+    </div>
+  </header>
 
-const newsContainer = document.getElementById("news");
+  <main class="home-main">
+    <section id="featured" class="content-section" aria-labelledby="featured-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Editor’s picks</p>
+          <h1 id="featured-heading">Featured news</h1>
+        </div>
+      </div>
+      <div id="featured-news" class="featured-grid" aria-live="polite" aria-busy="true">
+        <p class="news-state">Loading featured news…</p>
+      </div>
+    </section>
 
-async function loadNews() {
-  newsContainer.textContent = "Loading latest news...";
+    <section id="latest" class="content-section" aria-labelledby="latest-heading">
+      <div class="section-heading latest-heading">
+        <div>
+          <p class="eyebrow">Stay up to date</p>
+          <h2 id="latest-heading">Latest news</h2>
+        </div>
+        <p id="result-count" class="result-count" aria-live="polite"></p>
+      </div>
 
-  try {
-    const response = await fetch("news.json");
+      <div class="news-tools">
+        <div class="search-field">
+          <label for="news-search">Search articles</label>
+          <input id="news-search" type="search" placeholder="Search titles, topics, and stories" autocomplete="off" disabled>
+        </div>
+        <div class="category-filter">
+          <span class="filter-label" id="category-label">Filter by category</span>
+          <div id="category-filters" class="filter-list" role="group" aria-labelledby="category-label" aria-busy="true"></div>
+        </div>
+      </div>
 
-    if (!response.ok) {
-      throw new Error(`HTTP error: ${response.status}`);
-    }
+      <div id="latest-news" class="news-grid" aria-live="polite" aria-busy="true">
+        <p class="news-state">Loading latest news…</p>
+      </div>
+    </section>
+  </main>
 
-    const articles = await response.json();
-
-    if (!Array.isArray(articles)) {
-      throw new Error("Invalid news data");
-    }
-
-    newsContainer.replaceChildren();
-
-    if (articles.length === 0) {
-      newsContainer.textContent = "No articles published yet.";
-      return;
-    }
-
-    articles
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .forEach(article => {
-        const card = document.createElement("article");
-        card.className = "news-card";
-
-        const category = document.createElement("small");
-        category.className = "news-category";
-        category.textContent = article.category || "General";
-
-        const title = document.createElement("h3");
-        const link = document.createElement("a");
-
-        link.href = `article.html?id=${encodeURIComponent(article.id)}`;
-        link.textContent = article.title || "Untitled article";
-
-        title.appendChild(link);
-
-        const description = document.createElement("p");
-        description.textContent =
-          article.description || "No description available.";
-
-        const date = document.createElement("time");
-        date.dateTime = article.date || "";
-        date.textContent = article.date
-          ? new Date(article.date + "T00:00:00").toLocaleDateString(
-              "en-IN",
-              { day: "numeric", month: "short", year: "numeric" }
-            )
-          : "Date unavailable";
-
-        card.append(category, title, description, date);
-        newsContainer.appendChild(card);
-      });
-
-  } catch (error) {
-    console.error("PXL News error:", error);
-
-    newsContainer.textContent =
-      "Unable to load news. Please try again later.";
-  }
-}
-
-loadNews();
+  <footer class="site-footer">
+    <p>Independent technology news by the PXL community.</p>
+  </footer>
+</body>
+</html>

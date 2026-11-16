@@ -1,106 +1,106 @@
+"""Turn an authorized GitHub Issue submission into an article publication."""
+
+from __future__ import annotations
+
 import json
 import os
 import re
-import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlparse
-
-EVENT = json.loads(
-    Path(os.environ["GITHUB_EVENT_PATH"]).read_text()
-)
-
-issue = EVENT["issue"]
-body = issue.get("body") or ""
-issue_number = issue["number"]
-
-ALLOWED_CATEGORIES = {
-    "AI",
-    "Programming",
-    "Linux",
-    "Gaming",
-    "Cybersecurity",
-    "Open Source",
-    "Technology",
-}
+from typing import Any
 
 
-def get_field(name):
-    pattern = (
-        rf"(?ms)^### {re.escape(name)}\s*\n"
-        rf"(.*?)(?=^### |\Z)"
-    )
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
+
+from article_publisher import PublicationError, publish_article  # noqa: E402
+from article_validation import ArticleValidationError, validate_article  # noqa: E402
+
+
+AUTHORIZED_PUBLISHER = "pxlofficial1-sketch"
+
+
+def get_field(body: str, name: str) -> str:
+    pattern = rf"(?ms)^### {re.escape(name)}\s*\n(.*?)(?=^### |\Z)"
     match = re.search(pattern, body)
-
     if not match:
         return ""
 
     value = match.group(1).strip()
-
     if value.lower() in {"_no response_", "no response"}:
         return ""
-
     return value
 
 
-headline = get_field("Headline")
-category = get_field("Category")
-description = get_field("Article description")
-source = get_field("Original source URL")
+def article_from_event(event: dict[str, Any]) -> dict[str, str]:
+    issue = event.get("issue")
+    if not isinstance(issue, dict):
+        raise ArticleValidationError("The GitHub event does not contain an Issue.")
 
-if not headline or not description:
-    raise ValueError("Headline and description are required.")
+    author = issue.get("user", {}).get("login") if isinstance(issue.get("user"), dict) else None
+    if author != AUTHORIZED_PUBLISHER:
+        raise ArticleValidationError("Only the authorized publisher account may publish articles.")
+    if not str(issue.get("title", "")).startswith("[Publish]"):
+        raise ArticleValidationError("The Issue title must start with [Publish].")
 
-if len(headline) > 150 or len(description) > 2000:
-    raise ValueError("Article exceeds the allowed length.")
+    issue_number = issue.get("number")
+    if not isinstance(issue_number, int) or isinstance(issue_number, bool) or issue_number < 1:
+        raise ArticleValidationError("The Issue number is invalid.")
 
-if category not in ALLOWED_CATEGORIES:
-    raise ValueError("Invalid category.")
+    body = issue.get("body") or ""
+    if not isinstance(body, str):
+        raise ArticleValidationError("The Issue form body is invalid.")
 
-if source:
-    parsed = urlparse(source)
-    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-        raise ValueError("Invalid source URL.")
+    article = {
+        "id": f"pxl-issue-{issue_number}",
+        "title": get_field(body, "Headline"),
+        "category": get_field(body, "Category"),
+        "description": get_field(body, "Article description"),
+        "date": datetime.now(timezone.utc).date().isoformat(),
+        "source": get_field(body, "Original source URL"),
+    }
+    return validate_article(article)
 
-article = {
-    "id": f"pxl-issue-{issue_number}",
-    "title": headline,
-    "description": description,
-    "category": category,
-    "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-    "source": source,
-}
 
-news_path = Path("news.json")
-articles = json.loads(news_path.read_text(encoding="utf-8"))
+def _write_outputs(*, article_url: str = "", error: str = "") -> None:
+    output_path = os.environ.get("GITHUB_OUTPUT")
+    if not output_path:
+        return
+    safe_error = " ".join(error.splitlines()).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    with Path(output_path).open("a", encoding="utf-8") as output_file:
+        if article_url:
+            output_file.write(f"article_url={article_url}\n")
+        if error:
+            output_file.write(f"error={safe_error}\n")
 
-if any(a["id"] == article["id"] for a in articles):
-    raise ValueError("This issue has already been published.")
 
-articles.append(article)
+def main() -> int:
+    try:
+        event_path = os.environ.get("GITHUB_EVENT_PATH")
+        if not event_path:
+            raise ArticleValidationError("GitHub did not provide the Issue event payload.")
+        try:
+            event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+        except json.JSONDecodeError as error:
+            raise ArticleValidationError("The GitHub Issue event payload is malformed.") from error
 
-news_path.write_text(
-    json.dumps(articles, indent=2, ensure_ascii=False) + "\n",
-    encoding="utf-8",
-)
+        article = article_from_event(event)
+        branch = os.environ.get("PUBLISH_BRANCH", "")
+        if not branch:
+            raise PublicationError("The repository's default publishing branch was not provided.")
 
-subprocess.run(
-    ["python", "generate_feed.py"],
-    check=True,
-)
+        published_url = publish_article(REPOSITORY_ROOT, article, branch)
+        _write_outputs(article_url=published_url)
+        print(f"Published {article['id']}: {published_url}")
+        return 0
+    except Exception as error:
+        message = str(error) or "An unexpected publication error occurred."
+        _write_outputs(error=message)
+        print(f"Article publication failed: {message}", file=sys.stderr)
+        return 1
 
-subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=True)
-subprocess.run(
-    ["git", "config", "user.email",
-     "41898282+github-actions[bot]@users.noreply.github.com"],
-    check=True,
-)
 
-subprocess.run(["git", "add", "news.json", "feed.xml"], check=True)
-subprocess.run(
-    ["git", "commit", "-m", f"Publish article from issue #{issue_number}"],
-    check=True,
-)
-subprocess.run(["git", "push"], check=True)
-
-print(f"Published: {headline}")
+if __name__ == "__main__":
+    raise SystemExit(main())

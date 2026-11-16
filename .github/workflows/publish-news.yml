@@ -5,30 +5,48 @@ on:
     types: [opened]
 
 permissions:
-  contents: write
-  issues: write
+  contents: none
+  issues: none
 
 jobs:
   publish:
     if: github.event.issue.user.login == 'pxlofficial1-sketch' && startsWith(github.event.issue.title, '[Publish]')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout default branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Publish article
-        run: python .github/scripts/publish_issue.py
+      - name: Validate and publish article with RSS feed
+        id: publish
+        env:
+          PUBLISH_BRANCH: ${{ github.event.repository.default_branch }}
+        run: python .github/workflows/.github/scripts/publish_issue.py
 
-      - name: Confirm and close issue
+      - name: Report publication result
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PUBLISH_OUTCOME: ${{ steps.publish.outcome }}
+          ARTICLE_URL: ${{ steps.publish.outputs.article_url }}
+          PUBLISH_ERROR: ${{ steps.publish.outputs.error }}
         run: |
-          gh issue comment "$ISSUE_NUMBER" --body "Published successfully! Your article is now on PXL Tech News."
-          gh issue close "$ISSUE_NUMBER"
+          if [ "$PUBLISH_OUTCOME" = "success" ]; then
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Published successfully: $ARTICLE_URL"
+            gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+          else
+            FAILURE_MESSAGE="${PUBLISH_ERROR:-The publishing job could not complete. Check the Actions run for details.}"
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Publishing failed: $FAILURE_MESSAGE The issue is still open; correct the submission and try again."
+          fi

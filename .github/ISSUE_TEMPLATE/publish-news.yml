@@ -5,6 +5,11 @@ title: "[Publish] "
 labels:
   - news-submission
 body:
+  - type: markdown
+    attributes:
+      value: >-
+        Automated publishing is currently limited to the authorized publisher
+        account. Other submissions require maintainer review.
   - type: input
     id: headline
     attributes:
@@ -25,6 +30,7 @@ body:
         - Cybersecurity
         - Open Source
         - Technology
+        - Community
     validations:
       required: true
 

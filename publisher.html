@@ -181,6 +181,7 @@ button:hover {
       <option value="Cybersecurity">Cybersecurity</option>
       <option value="Open Source">Open Source</option>
       <option value="Technology">Technology</option>
+      <option value="Community">Community</option>
     </select>
 
     <label for="description">News description</label>
@@ -224,7 +225,10 @@ button:hover {
 
   <p class="note">
     Copy the generated object and add it to your repository's
-    news.json array. Keep existing articles.
+    news.json array, or submit it through the
+    <a href="https://github.com/pxlofficial1-sketch/PXL-NEWS/issues/new?template=publish-news.yml">GitHub publishing form</a>.
+    Automated publishing is currently limited to the authorized publisher account.
+    Never add access tokens to this page.
   </p>
 
   <p class="status" id="status" aria-live="polite"></p>
@@ -242,8 +246,114 @@ const fields = {
   source: document.getElementById("source")
 };
 
+const allowedCategories = new Set([
+  "AI", "Programming", "Linux", "Gaming", "Cybersecurity",
+  "Open Source", "Technology", "Community"
+]);
+const articleIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const maxArticleIdLength = 80;
+const maxTitleLength = 150;
+const maxDescriptionLength = 2000;
+let existingIds = new Set();
+let databaseAvailable = false;
+
+function validateArticle(article, ids = new Set()) {
+  if (!article || typeof article !== "object" || Array.isArray(article)) {
+    return "Article data must be an object.";
+  }
+
+  for (const [field, maxLength] of [
+    ["id", maxArticleIdLength],
+    ["title", maxTitleLength],
+    ["description", maxDescriptionLength]
+  ]) {
+    const value = article[field];
+    if (typeof value !== "string" || !value.trim()) {
+      return `${field} is required.`;
+    }
+    if (value !== value.trim()) {
+      return `${field} must not have leading or trailing spaces.`;
+    }
+    if (value.length > maxLength) {
+      return `${field} must be ${maxLength} characters or fewer.`;
+    }
+  }
+
+  if (!articleIdPattern.test(article.id)) {
+    return "ID must use lowercase letters and numbers separated by hyphens.";
+  }
+  if (ids.has(article.id)) {
+    return "This article ID already exists. Generate a new article ID.";
+  }
+  if (typeof article.category !== "string" || !allowedCategories.has(article.category)) {
+    return "Choose a valid article category.";
+  }
+
+  if (typeof article.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(article.date)) {
+    return "Date must use YYYY-MM-DD format.";
+  }
+  if (Number(article.date.slice(0, 4)) < 1) {
+    return "Date must be a real calendar date.";
+  }
+  const parsedDate = new Date(`${article.date}T00:00:00Z`);
+  if (Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== article.date) {
+    return "Date must be a real calendar date.";
+  }
+
+  if (article.source !== undefined && article.source !== "") {
+    if (typeof article.source !== "string" || /[\\\s]/.test(article.source)) {
+      return "Source must be a valid HTTP or HTTPS URL.";
+    }
+    try {
+      const sourceUrl = new URL(article.source);
+      const authority = article.source.split("://", 2)[1]?.split(/[/?#]/, 1)[0] || "";
+      if (!["http:", "https:"].includes(sourceUrl.protocol) || !sourceUrl.hostname || sourceUrl.username || sourceUrl.password || authority.includes("@")) {
+        return "Source must be an absolute HTTP or HTTPS URL without embedded credentials.";
+      }
+    } catch {
+      return "Source must be a valid HTTP or HTTPS URL.";
+    }
+  }
+
+  if (article.featured !== undefined && typeof article.featured !== "boolean") {
+    return "Featured must be true or false.";
+  }
+  return "";
+}
+
+function validateDatabase(articles) {
+  if (!Array.isArray(articles)) return "The article database must be a JSON array.";
+  const ids = new Set();
+  for (const article of articles) {
+    const error = validateArticle(article, ids);
+    if (error) return error;
+    ids.add(article.id);
+  }
+  return "";
+}
+
+const databaseCheck = fetch("news.json")
+  .then(response => {
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  })
+  .then(articles => {
+    const error = validateDatabase(articles);
+    if (error) throw new Error(error);
+    existingIds = new Set(articles.map(article => article.id));
+    databaseAvailable = true;
+    return true;
+  })
+  .catch(error => {
+    document.getElementById("status").textContent =
+      `Could not verify existing article IDs (${error.message}). The publishing workflow will still validate them.`;
+    return false;
+  });
+
 function createId() {
-  return "pxl-" + Date.now().toString(36);
+  const randomId = globalThis.crypto?.randomUUID?.().replaceAll("-", "");
+  const fallbackId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return `pxl-${randomId || fallbackId}`;
 }
 
 function updatePreview() {
@@ -265,8 +375,9 @@ Object.values(fields).forEach(field => {
   field.addEventListener("change", updatePreview);
 });
 
-form.addEventListener("submit", event => {
+form.addEventListener("submit", async event => {
   event.preventDefault();
+  await databaseCheck;
 
   const article = {
     id: createId(),
@@ -277,11 +388,19 @@ form.addEventListener("submit", event => {
     source: fields.source.value.trim()
   };
 
+  const validationError = validateArticle(article, databaseAvailable ? existingIds : new Set());
+  if (validationError) {
+    document.getElementById("status").textContent = validationError;
+    return;
+  }
+
   document.getElementById("output").value =
     JSON.stringify(article, null, 2);
 
   document.getElementById("status").textContent =
-    "Article generated successfully!";
+    databaseAvailable
+      ? "Article validated and generated."
+      : "Article generated. Existing IDs could not be checked here; the publishing workflow will check them before publication.";
 });
 
 document.getElementById("copyButton").addEventListener("click", async () => {
